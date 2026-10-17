@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'Build 2.1.19 has the exact release identity and an upgrade-safe code',
+    'Build 2.1.20 has the exact release identity and an upgrade-safe code',
     () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
       final match = RegExp(
@@ -13,11 +13,11 @@ void main() {
       ).firstMatch(pubspec);
 
       expect(match, isNotNull);
-      expect(match!.group(1), '2.1.19');
-      expect(int.parse(match.group(2)!), 2159);
-      expect(int.parse(match.group(2)!), greaterThan(2158));
+      expect(match!.group(1), '2.1.20');
+      expect(int.parse(match.group(2)!), 2160);
+      expect(int.parse(match.group(2)!), greaterThan(2159));
       // F-Droid ABI split: packaged arm64 code is base * 10 + ABI code.
-      expect(int.parse(match.group(2)!) * 10 + 2, 21592);
+      expect(int.parse(match.group(2)!) * 10 + 2, 21602);
     },
   );
 
@@ -42,7 +42,7 @@ void main() {
     );
     expect(gradle, contains('variant.versionCode * 10 + abiVersionCode'));
     expect(releaseWorkflow, contains("MINIMUM_INSTALLED_VERSION_CODE: '2127'"));
-    expect(releaseWorkflow, contains("REQUIRED_BASE_VERSION_CODE: '2159'"));
+    expect(releaseWorkflow, contains("REQUIRED_BASE_VERSION_CODE: '2160'"));
     expect(releaseWorkflow, contains("ARM64_ABI_CODE: '2'"));
     expect(
       releaseWorkflow,
@@ -58,7 +58,7 @@ void main() {
     expect(
       releaseWorkflow,
       contains(
-        "EXPECTED_RELEASE_CERT_SHA256: '475baf431b16d050c8f658ac838783b273f7c10bba06ed1d16bb0a4239f592fb'",
+        "EXPECTED_RELEASE_CERT_SHA256: '31:8c:c5:31:26:bd:d9:91:98:31:39:bc:a8:02:4d:0f:ff:ff:4c:9b:14:6f:df:8c:92:26:42:d1:66:7d:8c:8d'",
       ),
     );
     expect(
@@ -67,6 +67,6 @@ void main() {
     );
     expect(releaseWorkflow, contains('if certs != {expected_cert}:'));
     expect(qualityWorkflow, contains("MINIMUM_INSTALLED_VERSION_CODE: '2127'"));
-    expect(qualityWorkflow, contains("REQUIRED_BASE_VERSION_CODE: '2159'"));
+    expect(qualityWorkflow, contains("REQUIRED_BASE_VERSION_CODE: '2160'"));
   });
 }

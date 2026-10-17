@@ -20,7 +20,7 @@ jobs:
       # NOTE (reflander fork): switched to the FLW unified signing certificate
       # (flw-release, SHA256 318cc5…) so GitHub-built APKs match the local
       # Gitea-built ones and can upgrade each other.
-      EXPECTED_RELEASE_CERT_SHA256: '318cc53126bdd9919831bca8024d0fffff4c9b146fdf8c922642d1667d8c8d'
+      EXPECTED_RELEASE_CERT_SHA256: '31:8c:c5:31:26:bd:d9:91:98:31:39:bc:a8:02:4d:0f:ff:ff:4c:9b:14:6f:df:8c:92:26:42:d1:66:7d:8c:8d'
       # F-Droid ABI split: the Gradle versionCodeOverride derives per-ABI codes
       # as base * 10 + ABI code (arm64-v8a = 2). The pubspec value is the base.
       ARM64_ABI_CODE: '2'
@@ -71,7 +71,7 @@ jobs:
       - name: Verify release identity and upgrade versionCode
         env:
           MINIMUM_INSTALLED_VERSION_CODE: '2127'
-          REQUIRED_BASE_VERSION_CODE: '2159'
+          REQUIRED_BASE_VERSION_CODE: '2160'
         run: |
           python3 - <<'PY'
           import os
