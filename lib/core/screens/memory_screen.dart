@@ -214,7 +214,11 @@ class _MemoryScreenState extends State<MemoryScreen> {
                       Chip(
                         label: Text(
                           target,
-                          style: const TextStyle(fontSize: 11),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
