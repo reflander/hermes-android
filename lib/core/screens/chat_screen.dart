@@ -2597,10 +2597,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         onEvent: (event) {
           if (!mounted) return;
           final data = event.data;
-          final content = (data is Map
-                  ? data['content'] ?? data['text'] ?? data['message']
-                  : data)
-              ?.toString() ??
+          final content = (data['content'] ?? data['text'] ?? data['message'])
+                  ?.toString() ??
               '';
           if (content.trim().isEmpty) return;
           settleQueueAck(content);

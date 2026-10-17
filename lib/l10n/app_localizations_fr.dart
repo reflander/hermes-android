@@ -1675,6 +1675,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get starting_hermes => 'Démarrage de Hermes…';
+  @override
+  String get queue_pending_prefix => 'Queued:';
+  @override
+  String get queue_added => 'Added to queue — it will run after the current reply finishes.';
+  @override
+  String get queue_attachments_unsupported => 'Attachments cannot be queued yet. Please wait for the current reply to finish.';
+  @override
+  String get queue_unsupported_transport => 'This connection mode does not support queueing while busy. Please wait for the current reply to finish.';
+  @override
+  String get queue_failed => 'Failed to add to queue. Please wait for the current reply to finish and try again.';
 
   @override
   String get media_card_download => 'Download file';

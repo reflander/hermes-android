@@ -1612,6 +1612,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get starting_hermes => '正在启动 Hermes…';
+  @override
+  String get queue_pending_prefix => '排队中：';
+  @override
+  String get queue_added => '已加入队列，将在当前回复完成后自动执行。';
+  @override
+  String get queue_attachments_unsupported => '附件暂不支持排队，请等待当前回复完成后再发送。';
+  @override
+  String get queue_unsupported_transport => '当前连接模式不支持忙时排队，请等待当前回复完成后再发送。';
+  @override
+  String get queue_failed => '加入队列失败，请等待当前回复完成后再试。';
 
   @override
   String get media_card_download => 'Download file';

@@ -2923,6 +2923,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting Hermes…'**
   String get starting_hermes;
+  /// No description provided for @queue_pending_prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued:'**
+  String get queue_pending_prefix;
+
+  /// No description provided for @queue_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to queue — it will run after the current reply finishes.'**
+  String get queue_added;
+
+  /// No description provided for @queue_attachments_unsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments cannot be queued yet. Please wait for the current reply to finish.'**
+  String get queue_attachments_unsupported;
+
+  /// No description provided for @queue_unsupported_transport.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection mode does not support queueing while busy. Please wait for the current reply to finish.'**
+  String get queue_unsupported_transport;
+
+  /// No description provided for @queue_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add to queue. Please wait for the current reply to finish and try again.'**
+  String get queue_failed;
+
 
   /// No description provided for @media_card_download.
   ///
