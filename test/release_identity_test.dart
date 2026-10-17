@@ -58,7 +58,7 @@ void main() {
     expect(
       releaseWorkflow,
       contains(
-        "EXPECTED_RELEASE_CERT_SHA256: '31:8c:c5:31:26:bd:d9:91:98:31:39:bc:a8:02:4d:0f:ff:ff:4c:9b:14:6f:df:8c:92:26:42:d1:66:7d:8c:8d'",
+        "EXPECTED_RELEASE_CERT_SHA256: '318cc53126bdd991983139bca8024d0fffff4c9b146fdf8c922642d1667d8c8d'",
       ),
     );
     expect(
