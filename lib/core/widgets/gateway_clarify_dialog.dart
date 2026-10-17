@@ -72,13 +72,35 @@ class _GatewayClarifyDialogState extends State<GatewayClarifyDialog> {
     try {
       await widget.onRespond(answer);
       if (mounted) Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = context.l10n.hermes_could_not_accept_the_answer_please_try_again;
+        _error = _friendlyError(error);
       });
     }
+  }
+
+  /// Picks a user-facing message that reflects the actual failure instead of
+  /// always falling back to the generic "could not accept" copy.
+  ///
+  /// A dropped WebSocket or an expired Desktop Gateway session is the most
+  /// common cause of a clarify/approval round trip failing (the reply keeps
+  /// running server-side, but the request is no longer reachable from the app).
+  String _friendlyError(Object error) {
+    final text = error.toString();
+    final connectionLost =
+        error is StateError ||
+        text.contains('no longer connected') ||
+        text.contains('SocketException') ||
+        text.contains('WebSocketException') ||
+        text.contains('Connection is closed') ||
+        text.contains('handshake');
+    if (connectionLost) {
+      return '${context.l10n.connection_issue} · '
+          '${context.l10n.check_the_connection_and_try_again}';
+    }
+    return context.l10n.hermes_could_not_accept_the_answer_please_try_again;
   }
 
   @override

@@ -15,6 +15,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
   late DashboardClient _client;
   List<Map<String, dynamic>> _skills = [];
   bool _loading = true;
+  bool _toggling = false;
   String? _error;
 
   @override
@@ -56,6 +57,33 @@ class _SkillsScreenState extends State<SkillsScreen> {
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  /// Toggles a skill's enabled state through `PUT /api/skills/toggle` and
+  /// refreshes the list from the dashboard. Applies an optimistic flip and
+  /// rolls back on failure so the switch stays honest.
+  Future<void> _toggleSkill(Map<String, dynamic> skill, bool enabled) async {
+    final name = skill['name'] as String? ?? '';
+    if (name.isEmpty || _toggling) return;
+    final previous = skill['enabled'] as bool? ?? false;
+    _toggling = true;
+    setState(() => skill['enabled'] = enabled);
+    try {
+      await _client.toggleSkill(name: name, enabled: enabled);
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => skill['enabled'] = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${context.l10n.check_the_connection_and_try_again}\n$e',
+          ),
+        ),
+      );
+    } finally {
+      _toggling = false;
     }
   }
 
@@ -144,10 +172,9 @@ class _SkillsScreenState extends State<SkillsScreen> {
                       style: const TextStyle(fontSize: 12),
                     )
                   : null,
-              trailing: Icon(
-                enabled ? Icons.check_circle : Icons.block,
-                color: enabled ? Colors.green : Colors.orange,
-                size: 18,
+              trailing: Switch(
+                value: enabled,
+                onChanged: (value) => _toggleSkill(skill, value),
               ),
             ),
           );

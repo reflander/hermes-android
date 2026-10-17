@@ -17,7 +17,10 @@ jobs:
       HAS_RELEASE_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
       # Pin the production signer so a valid but wrong keystore cannot silently
       # break in-place upgrades. This is the certificate used for v2.1.0+.
-      EXPECTED_RELEASE_CERT_SHA256: '475baf431b16d050c8f658ac838783b273f7c10bba06ed1d16bb0a4239f592fb'
+      # NOTE (reflander fork): switched to the FLW unified signing certificate
+      # (flw-release, SHA256 318cc5…) so GitHub-built APKs match the local
+      # Gitea-built ones and can upgrade each other.
+      EXPECTED_RELEASE_CERT_SHA256: '318cc53126bdd9919831bca8024d0fffff4c9b146fdf8c922642d1667d8c8d'
       # F-Droid ABI split: the Gradle versionCodeOverride derives per-ABI codes
       # as base * 10 + ABI code (arm64-v8a = 2). The pubspec value is the base.
       ARM64_ABI_CODE: '2'

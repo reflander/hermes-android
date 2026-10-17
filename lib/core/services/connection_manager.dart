@@ -1822,6 +1822,16 @@ class DashboardClient {
     return data.whereType<Map<String, dynamic>>().toList();
   }
 
+  /// Enables or disables a skill on the Hermes dashboard. Changes take effect
+  /// on the next session (`PUT /api/skills/toggle`).
+  Future<Map<String, dynamic>> toggleSkill({
+    required String name,
+    required bool enabled,
+  }) => apiPut(
+    'skills/toggle',
+    body: {'name': name, 'enabled': enabled},
+  );
+
   Future<Map<String, dynamic>> setModel(
     String scope,
     String provider,

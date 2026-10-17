@@ -886,6 +886,14 @@ class DesktopGatewayClient {
     required String choice,
     String? serverRequestId,
   }) async {
+    if (_ws == null || !_ws!.isConnected) {
+      // Same reconnect + re-hydration path as clarify: a drop must not strand
+      // the approval dialog. Hermes re-delivers pending approvals on resume.
+      await _ensureSocket();
+      if (!await _waitForApproval(sessionId, serverRequestId)) {
+        throw StateError('The approval request is no longer active');
+      }
+    }
     final effectiveRequestId =
         serverRequestId ?? _serverApprovalByMobileSession[sessionId];
     final serverRequest = effectiveRequestId == null
@@ -941,11 +949,59 @@ class DesktopGatewayClient {
     await client.respondToSecret(requestId: requestId, value: value);
   }
 
+  /// Bounded wait for Hermes to re-deliver a pending server request after a
+  /// reconnect. Returns false when the request is not re-hydrated (the server
+  /// already expired or consumed it) or the socket drops again.
+  Future<bool> _waitForServerRequest(String requestId) async {
+    if (_serverRequests.containsKey(requestId)) return true;
+    final deadline = DateTime.now().add(const Duration(seconds: 10));
+    while (DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (_serverRequests.containsKey(requestId)) return true;
+      if (_ws == null || !_ws!.isConnected) return false;
+    }
+    return false;
+  }
+
+  /// Bounded wait for approval context after a reconnect: the dropped socket
+  /// cleared `_serverApprovalByMobileSession`, and resume re-delivers it.
+  Future<bool> _waitForApproval(
+    String sessionId,
+    String? serverRequestId,
+  ) async {
+    if (serverRequestId != null &&
+        _serverRequests.containsKey(serverRequestId)) {
+      return true;
+    }
+    if (_serverApprovalByMobileSession.containsKey(sessionId)) return true;
+    final deadline = DateTime.now().add(const Duration(seconds: 10));
+    while (DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (serverRequestId != null &&
+          _serverRequests.containsKey(serverRequestId)) {
+        return true;
+      }
+      if (_serverApprovalByMobileSession.containsKey(sessionId)) return true;
+      if (_ws == null || !_ws!.isConnected) return false;
+    }
+    return false;
+  }
+
   Future<void> respondToClarify({
     required String requestId,
     required String answer,
     String? questionId,
   }) async {
+    if (_ws == null || !_ws!.isConnected) {
+      // The socket dropped while the dialog was on screen (background pause,
+      // heartbeat timeout). Restore it first; Hermes re-delivers pending
+      // clarify through session.resume, so the round-trip can be retried
+      // instead of failing with "no longer connected".
+      await _ensureSocket();
+      if (!await _waitForServerRequest(requestId)) {
+        throw StateError('The clarify request is no longer active');
+      }
+    }
     final serverRequest = _serverRequests[requestId];
     final client = serverRequest?.method == 'clarify'
         ? _serverRequestClients[requestId]
