@@ -2533,13 +2533,111 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Queue-while-busy fallback for the composer.
+  ///
+  /// When a reply is already streaming (`_sending`/`_streaming`), a new
+  /// prompt would previously be dropped. Forward it to the gateway as
+  /// `/queue <text>` instead: Hermes enqueues it in the server FIFO for its
+  /// own turn after the current reply and replies with a confirmation, so
+  /// behaviour matches the Web dashboard's message-queue waiting. Attachments
+  /// are not supported on the queue path yet.
+  Future<void> _enqueueWhileBusy(
+    String text,
+    List<AttachmentDraft> attachments,
+  ) async {
+    if (text.trim().isEmpty) return;
+    if (attachments.isNotEmpty) {
+      _showAttachmentError(context.l10n.queue_attachments_unsupported);
+      return;
+    }
+    final desktopGateway = _desktopGateway;
+    if (desktopGateway == null) {
+      // REST/legacy transports share a single-flight stream; a second prompt
+      // would cancel the running reply, so refuse visibly instead of losing
+      // the prompt silently.
+      _showAttachmentError(context.l10n.queue_unsupported_transport);
+      return;
+    }
+
+    final queueText = '/queue $text';
+    _clearComposerForSend();
+    setState(() {
+      _messages.add({
+        'role': 'user',
+        'content': '${context.l10n.queue_pending_prefix} $text',
+        '_queue_pending': true,
+      });
+      _messages.add({
+        'role': 'assistant',
+        'content': '',
+        '_queue_ack_pending': true,
+      });
+    });
+    _scheduleStreamingFollow();
+
+    // Note: `_responseGeneration` is deliberately NOT bumped here — the
+    // running reply's stream owns it; a bump would mute its remaining tokens.
+    void settleQueueAck(String? serverReply) {
+      if (!mounted) return;
+      setState(() {
+        final assistant = _lastAssistantMessage();
+        if (assistant == null || assistant['_queue_ack_pending'] != true) {
+          return;
+        }
+        assistant['content'] = serverReply ?? context.l10n.queue_added;
+        assistant['_queue_ack_pending'] = false;
+      });
+      _scheduleStreamingFollow();
+    }
+
+    try {
+      await desktopGateway.sendSlashCommand(
+        sessionId: widget.session.id,
+        commandText: queueText,
+        onEvent: (event) {
+          if (!mounted) return;
+          final data = event.data;
+          final content = (data is Map
+                  ? data['content'] ?? data['text'] ?? data['message']
+                  : data)
+              ?.toString() ??
+              '';
+          if (content.trim().isEmpty) return;
+          settleQueueAck(content);
+        },
+      );
+      settleQueueAck(null);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        final assistant = _lastAssistantMessage();
+        if (assistant != null && assistant['_queue_ack_pending'] == true) {
+          _messages.remove(assistant);
+          final userIndex = _messages.lastIndexWhere(
+            (m) => m['_queue_pending'] == true,
+          );
+          if (userIndex >= 0) _messages.removeAt(userIndex);
+        }
+      });
+      _restoreComposerAfterRejectedSend(text);
+      _showAttachmentError(context.l10n.queue_failed);
+    }
+  }
+
   /// Send message via SSE streaming (Gateway API Server).
   Future<void> _sendMessage({bool speakResponse = false}) async {
     if (_voiceComposer.listening) return;
     final text = _textController.text.trim();
     final attachments = List<AttachmentDraft>.from(_attachmentDrafts);
     if (text.isEmpty && attachments.isEmpty) return;
-    if (_sending || _streaming || _pendingReattachResync) return;
+    if (_sending || _streaming || _pendingReattachResync) {
+      // Queue-while-busy: Hermes' `/queue` keeps the prompt for the next
+      // turn instead of interrupting the running reply (Web behaves the
+      // same). Plain text goes into the server FIFO; attachments are not
+      // supported on the queue path yet.
+      await _enqueueWhileBusy(text, attachments);
+      return;
+    }
     if (_transcriptLoadBlocksComposer) return;
     if (_loading || _error != null) {
       // Remote transports own their session history server-side. Let a prompt

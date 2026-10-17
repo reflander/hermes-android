@@ -651,6 +651,31 @@ class DesktopGatewayClient {
     );
   }
 
+  /// Sends a raw slash command (e.g. `/queue <text>`) to the active session
+  /// **without** entering the turn state machine and without waiting for a
+  /// terminal turn frame.
+  ///
+  /// The RPC acknowledgement (prompt.submit) settles this future quickly;
+  /// any streamed command-reply events keep arriving through [onEvent] on the
+  /// same socket. This is the queue-while-busy path: Hermes recognises
+  /// `/queue` on the busy fast-path and enqueues it for the next turn instead
+  /// of interrupting the running one (or strips the prefix and sends normally
+  /// when idle).
+  Future<void> sendSlashCommand({
+    required String sessionId,
+    required String commandText,
+    StreamCallback? onEvent,
+  }) async {
+    await _callSessionScoped(
+      sessionId,
+      (gateway) => gateway.client.sendStreaming(
+        'prompt.submit',
+        {'session_id': gateway.sessionId, 'text': commandText},
+        onEvent: onEvent,
+      ),
+    );
+  }
+
   /// Receives durable session-scoped events plus terminal turn frames.
   ///
   /// Terminal frames are also delivered through [submitPrompt] while its
