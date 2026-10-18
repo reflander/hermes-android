@@ -4590,7 +4590,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         textInputAction: TextInputAction.send,
                         enabled:
                             !_transcriptLoadBlocksComposer &&
-                            !_streaming &&
                             !_pendingReattachResync,
                         onSubmitted: (_) => _sendMessage(),
                       ),
@@ -4635,6 +4634,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(width: 4),
+                if (_streaming && _textController.text.trim().isNotEmpty)
+                  Semantics(
+                    label: context.l10n.send_message,
+                    button: true,
+                    enabled: true,
+                    excludeSemantics: true,
+                    child: IconButton(
+                      icon: const Icon(Icons.outbox, size: 20),
+                      onPressed: _sendMessage,
+                      tooltip: context.l10n.send_message,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
+                    ),
+                  ),
                 Semantics(
                   label: _streaming
                       ? context.l10n.stop_response
