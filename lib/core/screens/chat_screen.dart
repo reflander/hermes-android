@@ -591,7 +591,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String get _gatewayNoticeIdentity =>
       '$_connectionIdentity|${widget.session.id}';
 
-  void _onComposerChanged() => _composerRevision += 1;
+  void _onComposerChanged() {
+    _composerRevision += 1;
+    if (mounted) setState(() {});
+  }
 
   String get _storedSessionKey =>
       _desktopGateway?.storedSessionKeyFor(widget.session.id) ??
